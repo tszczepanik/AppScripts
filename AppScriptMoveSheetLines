@@ -1,0 +1,85 @@
+function onEdit(e) {
+  // see Sheet event objects docs
+  // https://developers.google.com/apps-script/guides/triggers/events#google_sheets_events
+  
+  Logger.log("Inicio");
+  var ss = e.source;
+  var s = ss.getActiveSheet();
+  var r = e.range;
+  
+  // to let you modify where the action and move columns are in the form responses sheet
+  var actionColNew = 16; // Column P 
+  var actionColArq = 41; // Column AN 
+  
+   var TabAtiva = SpreadsheetApp.getActiveSheet().getName()
+   
+   
+  // Get the row and column of the active cell.
+  var rowIndex = r.getRowIndex();
+  var colIndex = r.getColumnIndex();
+  
+  // Get the number of columns in the active sheet.
+  // -1 to drop our action/status column
+  var colNumber = s.getLastColumn()-1;
+  
+  // if our action/status col is changed to ok do stuff
+  Logger.log("actionColNew: "+actionColNew + " colIndex: " + colIndex + " TabAtiva: " + TabAtiva);
+  Logger.log("rowIndex: "+rowIndex );
+  Logger.log("e.value =="+e.value)
+  Logger.log("colIndex == actionColNew "+colIndex+" == "+actionColNew)
+  Logger.log("TabAtiva : "+TabAtiva)
+
+  if ( e.value =="Sim" && actionColNew == colIndex && TabAtiva == "Novos" ) 
+  {
+    Logger.log("Start NovoEnsaios");
+    // get our target sheet name - in this example we are using the priority column
+    var targetSheet = "EnsaiosEmProgresso";
+    
+    
+    // if the sheet exists do more stuff
+    if (ss.getSheetByName(targetSheet)) { 
+      // set our target sheet and target range
+      Logger.log(" Range: RI"+rowIndex+" colNumber: "+colNumber)
+
+      var targetSheet = ss.getSheetByName(targetSheet);
+      Logger.log(" targetSheet "+targetSheet )
+      var LastRow=targetSheet.getLastRow()
+      Logger.log(" LastRow  "+ LastRow)
+      var targetRange = targetSheet.getRange(targetSheet.getLastRow()+1, 1, 1, colNumber);
+      // get our source range/row
+       Logger.log(" targetRange "+targetRange )
+      
+      var sourceRange = s.getRange(rowIndex, 1, 1, colNumber);
+    
+      // new sheets says: 'Cannot cut from form data. Use copy instead.' 
+      sourceRange.copyTo(targetRange);
+      // ..but we can still delete the row after
+      
+      s.deleteRow(rowIndex);
+      Logger.log("Done NovoEnsaios");
+      // or you might want to keep but note move e.g. r.setValue("moved");
+    }
+  }
+  // Arquivo
+  if ( e.value =="Sim" && actionColArq == colIndex && TabAtiva == "EnsaiosEmProgresso" ) 
+  {
+    // get our target sheet name - in this example we are using the priority column
+    var targetSheet = "EnsaiosCompletos";
+    
+    Logger.log("Start EnsaiosCompletos"); 
+    // if the sheet exists do more stuff
+    if (ss.getSheetByName(targetSheet)) { 
+      // set our target sheet and target range
+      var targetSheet = ss.getSheetByName(targetSheet);
+      var targetRange = targetSheet.getRange(targetSheet.getLastRow()+1, 1, 1, colNumber);
+      // get our source range/row
+      var sourceRange = s.getRange(rowIndex, 1, 1, colNumber);
+      // new sheets says: 'Cannot cut from form data. Use copy instead.' 
+      sourceRange.copyTo(targetRange);
+      // ..but we can still delete the row after
+      s.deleteRow(rowIndex);
+      Logger.log("Done EnsaiosCompletos");
+      // or you might want to keep but note move e.g. r.setValue("moved");
+    }
+  }  
+}
